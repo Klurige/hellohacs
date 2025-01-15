@@ -1,12 +1,11 @@
 {
-  "domain": "hellohacs",
-  "name": "Hello Hacs",
-  "codeowners": [
-    "@klurige"
-  ],
+  "codeowners": ["@Klurige"],
   "config_flow": true,
-  "documentation": "https://github.com/ludeeus/integration_blueprint",
-  "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/ludeeus/integration_blueprint/issues",
-  "version": "0.0.1"
+  "dependencies": [],
+  "documentation": "https://github.com/Klurige/hellohacs",
+  "domain": "hellohacs",
+  "iot_class": "calculated",
+  "name": "Hello Hacs",
+  "requirements": [],
+  "version": "0.0.2"
 }

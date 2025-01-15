@@ -1,5 +1,4 @@
 {
-    "name": "Hello World",
-    "homeassistant": "2024.12.0",
-    "hacs": "2.0.1"
+  "name": "Hello Hacs",
+  "render_readme": true
 }
