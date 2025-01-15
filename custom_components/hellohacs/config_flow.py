@@ -1,5 +1,6 @@
 from homeassistant import config_entries
 from homeassistant.core import callback
+import voluptuous as vol
 from .const import DOMAIN
 
 class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -12,11 +13,7 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Validate user input here
-            if self._validate_input(user_input):
-                return self.async_create_entry(title="Example Integration", data=user_input)
-            else:
-                errors["base"] = "invalid_input"
+            return self.async_create_entry(title="Example Integration", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -28,13 +25,6 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _get_schema():
         """Return the schema for the user input."""
-        import voluptuous as vol
         return vol.Schema({
-            vol.Required("username"): str,
-            vol.Required("password"): str,
+            vol.Required("other_sensor_id"): str,
         })
-
-    def _validate_input(self, data):
-        """Validate the user input."""
-        # Add your validation logic here
-        return True
