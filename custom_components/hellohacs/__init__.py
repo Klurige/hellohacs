@@ -4,14 +4,11 @@ from .const import DOMAIN
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up hellohacs from a config entry."""
-    # Perform any setup tasks here
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    # Example: Set up a platform
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    # Await the async_forward_entry_setup call
+    await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
     return True
 
