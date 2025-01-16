@@ -8,7 +8,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
     # Await the async_forward_entry_setup call
-    await hass.config_entries.async_forward_entry_setups
+    await hass.config_entries.async_forward_entry_setups()
 
     return True
 
