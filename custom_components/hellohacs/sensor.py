@@ -3,6 +3,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.event import async_track_time_change
 import logging
 import datetime
+import pytz
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,5 +60,7 @@ class TimeSensor(Entity):
 
     async def _update_time(self, now):
         """Update the sensor state with the current time."""
-        self._state = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
+        local_time = datetime.datetime.now(local_tz).strftime("%Y-%m-%d %H:%M:%S")
+        self._state = local_time
         self.async_write_ha_state()
