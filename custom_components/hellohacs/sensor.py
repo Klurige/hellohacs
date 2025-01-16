@@ -61,6 +61,6 @@ class TimeSensor(Entity):
     async def _update_time(self, now):
         """Update the sensor state with the current time."""
         local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
-        local_time = datetime.datetime.now(local_tz).strftime("%Y-%m-%d %H:%M:%S")
+        local_time = datetime.datetime.now(local_tz).strftime("%Y-%m-%dT%H:%M:%S%z")
         self._state = local_time
         self.async_write_ha_state()
