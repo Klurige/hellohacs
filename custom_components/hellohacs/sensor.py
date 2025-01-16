@@ -1,3 +1,5 @@
+
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.event import async_track_time_change
@@ -49,6 +51,8 @@ class TimeSensor(Entity):
         _LOGGER.debug("TimeSensor initialized")
         # Schedule the first update
         async_track_time_change(hass, self._update_time, second=0)
+        # Send the initial value as soon as possible
+        hass.loop.create_task(self._send_initial_value())
 
     @property
     def name(self):
@@ -58,9 +62,18 @@ class TimeSensor(Entity):
     def state(self):
         return self._state
 
+    async def _send_initial_value(self):
+        """Send the initial value with current time but minutes set to 00."""
+        local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
+        now = datetime.datetime.now(local_tz)
+        initial_time = now.replace(minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
+        self._state = initial_time
+        self.async_write_ha_state()
+
     async def _update_time(self, now):
         """Update the sensor state with the current time."""
         local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
         local_time = datetime.datetime.now(local_tz).strftime("%Y-%m-%dT%H:%M:%S%z")
         self._state = local_time
         self.async_write_ha_state()
+
