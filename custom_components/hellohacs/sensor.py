@@ -1,13 +1,15 @@
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.helpers.event import async_track_time_interval
 import logging
+import datetime
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
     other_sensor_id = entry.data.get("other_sensor_id")
-    async_add_entities([ExampleSensor(hass, other_sensor_id)])
+    async_add_entities([ExampleSensor(hass, other_sensor_id), TimeSensor(hass)])
 
 class ExampleSensor(Entity):
     """Representation of a Sensor."""
@@ -36,3 +38,27 @@ class ExampleSensor(Entity):
                 self._state += 1
                 self.async_write_ha_state()
                 _LOGGER.debug("ExampleSensor state incremented to %s", self._state)
+
+class TimeSensor(Entity):
+    """Representation of a Time Sensor."""
+
+    def __init__(self, hass):
+        self._state = None
+        self._hass = hass
+        _LOGGER.debug("TimeSensor initialized")
+        # Schedule the first update
+        async_track_time_interval(hass, self._update_time, datetime.timedelta(seconds=15))
+
+    @property
+    def name(self):
+        return "Time Sensor"
+
+    @property
+    def state(self):
+        return self._state
+
+    async def _update_time(self, now):
+        """Update the sensor state with the current time."""
+        self._state = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.async_write_ha_state()
+
