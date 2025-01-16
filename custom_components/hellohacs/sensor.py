@@ -1,6 +1,6 @@
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_time_change
 import logging
 import datetime
 
@@ -47,7 +47,7 @@ class TimeSensor(Entity):
         self._hass = hass
         _LOGGER.debug("TimeSensor initialized")
         # Schedule the first update
-        async_track_time_interval(hass, self._update_time, datetime.timedelta(seconds=15))
+        async_track_time_change(hass, self._update_time, second=0)
 
     @property
     def name(self):
@@ -61,4 +61,3 @@ class TimeSensor(Entity):
         """Update the sensor state with the current time."""
         self._state = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.async_write_ha_state()
-
