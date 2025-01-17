@@ -11,18 +11,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
-    other_sensor_id = entry.data.get("other_sensor_id")
-    async_add_entities([ExampleSensor(hass, other_sensor_id), TimeSensor(hass)])
+    nordpool_sensor_id = entry.data.get("nordpool_sensor_id")
+    async_add_entities([ExampleSensor(hass, nordpool_sensor_id), TimeSensor(hass)])
 
 class ExampleSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, hass, other_sensor_id):
+    def __init__(self, hass, nordpool_sensor_id):
         self._state = 0
         self._hass = hass
-        self._other_sensor_id = other_sensor_id
+        self._nordpool_sensor_id = nordpool_sensor_id
         self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._handle_event)
-        _LOGGER.debug("ExampleSensor initialized to listen for %s", other_sensor_id)
+        _LOGGER.debug("ExampleSensor initialized to listen for %s", nordpool_sensor_id)
 
     @property
     def name(self):
@@ -34,9 +34,11 @@ class ExampleSensor(Entity):
 
     async def _handle_event(self, event):
         """Handle state changes of the other sensor."""
-        if event.data.get("entity_id") == self._other_sensor_id:
+        if event.data.get("entity_id") == self._nordpool_sensor_id:
             new_state = event.data.get("new_state")
-            _LOGGER.debug("Event received for %s: %s", self._other_sensor_id, new_state)
+            new_attributes = new_state.get("attributes")
+            _LOGGER.debug("Event received for %s: %s", self._nordpool_sensor_id, new_state)
+            _LOGGER.debug("Attributes received for %s: %s", self._nordpool_sensor_id, new_attributes)
             if new_state:
                 self._state += 1
                 self.async_write_ha_state()

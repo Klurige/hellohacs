@@ -26,5 +26,5 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _get_schema():
         """Return the schema for the user input."""
         return vol.Schema({
-            vol.Required("other_sensor_id"): str,
+            vol.Required("nordpool_sensor_id"): str,
         })
