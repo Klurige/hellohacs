@@ -36,14 +36,13 @@ class ExampleSensor(Entity):
         """Handle state changes of the other sensor."""
         if event.data.get("entity_id") == self._nordpool_sensor_id:
             new_state = event.data.get("new_state")
-            new_attributes = event.data.get("attributes")
-            _LOGGER.debug("Event received for %s: %s", self._nordpool_sensor_id, new_state)
-            _LOGGER.debug("Attributes received for %s: %s", self._nordpool_sensor_id, new_attributes)
             if new_state:
-                self._state += new_state.value
+                new_attributes = new_state.attributes
+                _LOGGER.debug("Event received for %s: %s", self._nordpool_sensor_id, new_state)
+                _LOGGER.debug("Attributes received for %s: %s", self._nordpool_sensor_id, new_attributes)
+                self._state += 1
                 self.async_write_ha_state()
                 _LOGGER.debug("ExampleSensor state incremented to %s", self._state)
-
 class TimeSensor(Entity):
     """Representation of a Time Sensor."""
 
