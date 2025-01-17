@@ -38,11 +38,18 @@ class ExampleSensor(Entity):
             new_state = event.data.get("new_state")
             if new_state:
                 new_attributes = new_state.attributes
-                _LOGGER.debug("Event received for %s: %s", self._nordpool_sensor_id, new_state)
-                _LOGGER.debug("Attributes received for %s: %s", self._nordpool_sensor_id, new_attributes)
-                self._state += 1
+
+                raw_today = new_attributes.get("raw_today", [])
+                raw_tomorrow = new_attributes.get("raw_tomorrow", [])
+
+                _LOGGER.debug("Raw today values: %s", raw_today)
+                _LOGGER.debug("Raw tomorrow values: %s", raw_tomorrow)
+
+                self._state += len(raw_today)
                 self.async_write_ha_state()
                 _LOGGER.debug("ExampleSensor state incremented to %s", self._state)
+
+
 class TimeSensor(Entity):
     """Representation of a Time Sensor."""
 
