@@ -40,7 +40,7 @@ class ExampleSensor(Entity):
             _LOGGER.debug("Event received for %s: %s", self._nordpool_sensor_id, new_state)
             _LOGGER.debug("Attributes received for %s: %s", self._nordpool_sensor_id, new_attributes)
             if new_state:
-                self._state += 1
+                self._state += new_state.value
                 self.async_write_ha_state()
                 _LOGGER.debug("ExampleSensor state incremented to %s", self._state)
 
