@@ -59,7 +59,7 @@ INVERTER_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ...] = (
     ),
     HuaweiSolarNumberEntityDescription(
         key="ACTIVE_POWER_FIXED_VALUE_DERATING",
-        static_maximum_key=100,
+        native_max_value=100,
         native_step=1,
         native_min_value=0,
         icon="mdi:transmission-tower",
@@ -67,7 +67,6 @@ INVERTER_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
 )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
