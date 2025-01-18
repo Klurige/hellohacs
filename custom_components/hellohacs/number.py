@@ -11,20 +11,19 @@ from homeassistant.components.number import (
 from homeassistant.components.number.const import DEFAULT_MAX_VALUE, DEFAULT_MIN_VALUE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
-
 @dataclass
 class ElectricityPriceLevelsNumberEntityDescription(NumberEntityDescription):
-    """ Describes ElectritiyPriceLevels nuber entities."""
-
+    """Describes ElectricityPriceLevels number entities."""
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ElectricityPriceLevels number entities."""
 
@@ -42,18 +41,25 @@ async def async_setup_entry(
                 entity_category="Electricity Price Levels",
             ),
             native_value=2.92,
+            device_info=DeviceInfo(
+                identifiers={(DOMAIN, entry.entry_id)},
+                name="Electricity Price Levels Device",
+                manufacturer="Your Manufacturer",
+                model="Your Model",
+                sw_version="1.0",
+            ),
         )
     )
 
     async_add_entities(entities_to_add)
 
-
 class ElectricityPriceLevelsNumberEntity(NumberEntity):
-    """Representation of a ElectricityPriceLevels number entity."""
+    """Representation of an ElectricityPriceLevels number entity."""
 
-    def __init__(self, description: ElectricityPriceLevelsNumberEntityDescription, native_value: float):
+    def __init__(self, description: ElectricityPriceLevelsNumberEntityDescription, native_value: float, device_info: DeviceInfo):
         self.entity_description = description
         self._attr_native_value = native_value
+        self._attr_device_info = device_info
 
     @property
     def native_value(self) -> float:
