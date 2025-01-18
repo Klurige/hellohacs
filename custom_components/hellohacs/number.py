@@ -112,7 +112,7 @@ class HuaweiSolarNumberEntity(NumberEntity):
 
         Do not use directly. Use `.create` instead!
         """
-        super().__init__(description.context)
+        super(NumberEntity, self).__init__()
         self.entity_description = description
         self._attr_unique_id = f"{description.key}"
 
