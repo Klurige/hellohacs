@@ -47,7 +47,7 @@ async def async_setup_entry(
                 native_max_value=DEFAULT_MAX_VALUE,
                 native_unit_of_measurement="öre/kWh",
                 mode=NumberMode.BOX,
-                entity_category="Electricity Price Levels",
+                entity_category=EntityCategory.CONFIG,
             ),
             native_value=2.92,
             device_info=device_info,
