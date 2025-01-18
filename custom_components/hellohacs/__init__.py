@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unit_of_measurement": "öre/kWh",
         "mode": "box"
     }
-    input_number_entity_id = "input_number.supplier_balance_fee"
+    input_number_entity_id = "input_number.supplier_balance_fee_hellohacs"
     entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         domain="input_number",
