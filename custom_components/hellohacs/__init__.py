@@ -3,8 +3,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.number import NumberEntity
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
 from .const import DOMAIN
+from homeassistant.const import Platform
+
+PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
+    Platform.SENSOR
+]
 
 class ExampleNumberEntity(NumberEntity):
     def __init__(self, hass, name, initial, min_value, max_value, step):
@@ -58,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([number_entity])
 
     # Await the async_forward_entry_setup call
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -68,4 +73,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.entry_id in hass.data[DOMAIN]:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
