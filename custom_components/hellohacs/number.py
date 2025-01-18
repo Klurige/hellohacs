@@ -1,5 +1,3 @@
-"""Number entities for Huawei Solar."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,6 +18,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+@dataclass
+class HuaweiSolarNumberEntityDescription(NumberEntityDescription):
+    """Describes Huawei Solar number entity."""
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -28,12 +30,36 @@ async def async_setup_entry(
     """Huawei Solar Number entities Setup."""
 
     entities_to_add: list[NumberEntity] = []
+
     entities_to_add.append(
-        NumberEntity(
-            key = "huawei_solar_battery_soc",
-            native_value = 50,
+        HuaweiSolarNumberEntity(
+            HuaweiSolarNumberEntityDescription(
+                key="huawei_solar_battery_soc",
+                name="Battery State of Charge",
+                native_min_value=DEFAULT_MIN_VALUE,
+                native_max_value=DEFAULT_MAX_VALUE,
+                native_unit_of_measurement=PERCENTAGE,
+                mode=NumberMode.AUTO,
+            ),
+            native_value=50,
         )
     )
 
     async_add_entities(entities_to_add)
 
+class HuaweiSolarNumberEntity(NumberEntity):
+    """Representation of a Huawei Solar number entity."""
+
+    def __init__(self, description: HuaweiSolarNumberEntityDescription, native_value: float):
+        self.entity_description = description
+        self._attr_native_value = native_value
+
+    @property
+    def native_value(self) -> float:
+        """Return the current value."""
+        return self._attr_native_value
+
+    @native_value.setter
+    def native_value(self, value: float) -> None:
+        """Set the current value."""
+        self._attr_native_value = value
