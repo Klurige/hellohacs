@@ -28,6 +28,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ElectricityPriceLevels number entities."""
 
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Electricity Price Levels Device",
+        manufacturer="Your Manufacturer",
+        model="Your Model",
+        sw_version="1.0",
+    )
+
     entities_to_add: list[NumberEntity] = []
 
     entities_to_add.append(
@@ -42,13 +50,7 @@ async def async_setup_entry(
                 entity_category="Electricity Price Levels",
             ),
             native_value=2.92,
-            device_info=DeviceInfo(
-                identifiers={(DOMAIN, entry.entry_id)},
-                name="Electricity Price Levels Device",
-                manufacturer="Your Manufacturer",
-                model="Your Model",
-                sw_version="1.0",
-            ),
+            device_info=device_info,
         )
     )
 
