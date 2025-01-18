@@ -5,6 +5,7 @@ from homeassistant.helpers.entity import DeviceInfo
 import logging
 import datetime
 import pytz
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
