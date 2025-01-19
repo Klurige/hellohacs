@@ -1,94 +1,193 @@
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.entity import DeviceInfo
-import logging
-import datetime
-import pytz
+"""Support for the Forecast.Solar sensor service."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from forecast_solar.models import Estimate
+
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import ForecastSolarConfigEntry
 from .const import DOMAIN
+from .coordinator import ForecastSolarDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the sensor platform."""
-    nordpool_sensor_id = entry.data.get("nordpool_sensor_id")
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, entry.entry_id)},
-        name="Electricity Price Levels Device",
-        manufacturer="Your Manufacturer",
-        model="Your Model",
-        sw_version="1.0",
+@dataclass(frozen=True)
+class ForecastSolarSensorEntityDescription(SensorEntityDescription):
+    """Describes a Forecast.Solar Sensor."""
+
+    state: Callable[[Estimate], Any] | None = None
+
+
+SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
+    ForecastSolarSensorEntityDescription(
+        key="energy_production_today",
+        translation_key="energy_production_today",
+        state=lambda estimate: estimate.energy_production_today,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="energy_production_today_remaining",
+        translation_key="energy_production_today_remaining",
+        state=lambda estimate: estimate.energy_production_today_remaining,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="energy_production_tomorrow",
+        translation_key="energy_production_tomorrow",
+        state=lambda estimate: estimate.energy_production_tomorrow,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_highest_peak_time_today",
+        translation_key="power_highest_peak_time_today",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_highest_peak_time_tomorrow",
+        translation_key="power_highest_peak_time_tomorrow",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_production_now",
+        translation_key="power_production_now",
+        device_class=SensorDeviceClass.POWER,
+        state=lambda estimate: estimate.power_production_now,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_production_next_hour",
+        translation_key="power_production_next_hour",
+        state=lambda estimate: estimate.power_production_at_time(
+            estimate.now() + timedelta(hours=1)
+        ),
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_production_next_12hours",
+        translation_key="power_production_next_12hours",
+        state=lambda estimate: estimate.power_production_at_time(
+            estimate.now() + timedelta(hours=12)
+        ),
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="power_production_next_24hours",
+        translation_key="power_production_next_24hours",
+        state=lambda estimate: estimate.power_production_at_time(
+            estimate.now() + timedelta(hours=24)
+        ),
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="energy_current_hour",
+        translation_key="energy_current_hour",
+        state=lambda estimate: estimate.energy_current_hour,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+    ForecastSolarSensorEntityDescription(
+        key="energy_next_hour",
+        translation_key="energy_next_hour",
+        state=lambda estimate: estimate.sum_energy_production(1),
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ForecastSolarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Defer sensor setup to the shared sensor module."""
+    coordinator = entry.runtime_data
+
+    async_add_entities(
+        ForecastSolarSensorEntity(
+            entry_id=entry.entry_id,
+            coordinator=coordinator,
+            entity_description=entity_description,
+        )
+        for entity_description in SENSORS
     )
-    async_add_entities([ExampleSensor(hass, nordpool_sensor_id, device_info), TimeSensor(hass, device_info)])
 
-class ExampleSensor(Entity):
-    """Representation of a Sensor."""
 
-    def __init__(self, hass, nordpool_sensor_id, device_info: DeviceInfo):
-        self._state = 0
-        self._hass = hass
-        self._nordpool_sensor_id = nordpool_sensor_id
-        self._attr_device_info = device_info
-        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._handle_event)
-        _LOGGER.debug("ExampleSensor initialized to listen for %s", nordpool_sensor_id)
+class ForecastSolarSensorEntity(
+    CoordinatorEntity[ForecastSolarDataUpdateCoordinator], SensorEntity
+):
+    """Defines a Forecast.Solar sensor."""
 
-    @property
-    def name(self):
-        return "Example Sensor"
+    entity_description: ForecastSolarSensorEntityDescription
+    _attr_has_entity_name = True
 
-    @property
-    def state(self):
-        return self._state
+    def __init__(
+        self,
+        *,
+        entry_id: str,
+        coordinator: ForecastSolarDataUpdateCoordinator,
+        entity_description: ForecastSolarSensorEntityDescription,
+    ) -> None:
+        """Initialize Forecast.Solar sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = entity_description
+        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
+        self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
-    async def _handle_event(self, event):
-        """Handle state changes of the other sensor."""
-        if event.data.get("entity_id") == self._nordpool_sensor_id:
-            new_state = event.data.get("new_state")
-            if new_state:
-                new_attributes = new_state.attributes
-
-                raw_today = new_attributes.get("raw_today", [])
-                raw_tomorrow = new_attributes.get("raw_tomorrow", [])
-
-                _LOGGER.debug("Raw today values: %s", raw_today)
-                _LOGGER.debug("Raw tomorrow values: %s", raw_tomorrow)
-
-                self._state += len(raw_today)
-                self.async_write_ha_state()
-                _LOGGER.debug("ExampleSensor state incremented to %s", self._state)
-
-class TimeSensor(Entity):
-    """Representation of a Time Sensor."""
-
-    def __init__(self, hass, device_info: DeviceInfo):
-        self._state = None
-        self._hass = hass
-        self._attr_device_info = device_info
-        _LOGGER.debug("TimeSensor initialized")
-        # Schedule the first update
-        async_track_time_change(hass, self._update_time, second=0)
-        # Send the initial value as soon as possible
-        hass.loop.create_task(self._send_initial_value())
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Forecast.Solar",
+            model=coordinator.data.account_type.value,
+            name="Solar production forecast",
+            configuration_url="https://forecast.solar",
+        )
 
     @property
-    def name(self):
-        return "Time Sensor"
+    def native_value(self) -> datetime | StateType:
+        """Return the state of the sensor."""
+        if self.entity_description.state is None:
+            state: StateType | datetime = getattr(
+                self.coordinator.data, self.entity_description.key
+            )
+        else:
+            state = self.entity_description.state(self.coordinator.data)
 
-    @property
-    def state(self):
-        return self._state
-
-    async def _send_initial_value(self):
-        """Send the initial value with current time but minutes set to 00."""
-        local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
-        now = datetime.datetime.now(local_tz)
-        initial_time = now.replace(minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
-        self._state = initial_time
-        self.async_write_ha_state()
-
-    async def _update_time(self, now):
-        """Update the sensor state with the current time."""
-        local_tz = pytz.timezone(self._hass.config.time_zone)  # Get the time zone from Home Assistant
-        local_time = datetime.datetime.now(local_tz).strftime("%Y-%m-%dT%H:%M:%S%z")
-        self._state = local_time
-        self.async_write_ha_state()
+        return state
