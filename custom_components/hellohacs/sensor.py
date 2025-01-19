@@ -23,7 +23,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.config_entries import ConfigEntry
 from .const import DOMAIN
-from .coordinator import ForecastSolarDataUpdateCoordinator
 
 
 @dataclass(frozen=True)
@@ -140,8 +139,7 @@ async def async_setup_entry(
     )
 
 
-class ForecastSolarSensorEntity(
-    CoordinatorEntity[ForecastSolarDataUpdateCoordinator], SensorEntity
+class ForecastSolarSensorEntity(SensorEntity
 ):
     """Defines a Forecast.Solar sensor."""
 
@@ -152,11 +150,10 @@ class ForecastSolarSensorEntity(
         self,
         *,
         entry_id: str,
-        coordinator: ForecastSolarDataUpdateCoordinator,
         entity_description: ForecastSolarSensorEntityDescription,
     ) -> None:
         """Initialize Forecast.Solar sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__()
         self.entity_description = entity_description
         self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
